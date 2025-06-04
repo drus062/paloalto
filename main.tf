@@ -63,7 +63,7 @@ resource "aws_internet_gateway" "igw" { # Remember IGWs are "per se" HA, no need
   }
 }
 
-# NAT Gateways (One per Public Subnet for HA)
+# The Elastic IP address for the NAT
 resource "aws_eip" "nat" {
   count  = length(aws_subnet.public) # One EIP for each NAT Gateway
   domain = "vpc"
@@ -72,7 +72,7 @@ resource "aws_eip" "nat" {
   }
 }
 
-
+# NAT Gateways (One per Public Subnet for HA)
 resource "aws_nat_gateway" "main" {
   count         = length(aws_subnet.public)         # NOTICE: --> One NAT GTW per public subnet to make sure HA comes in properly
   allocation_id = aws_eip.nat[count.index].id
@@ -105,11 +105,11 @@ resource "aws_route_table_association" "public" {
 
 
 resource "aws_route_table" "private" {
-  count  = length(aws_subnet.private)                   # Create a dedicated route table for each private SUBNET
+  count  = length(aws_subnet.private)       # Create a dedicated route table for each private SUBNET
   vpc_id = aws_vpc.main.id
 
   route {
-    cidr_block     = "0.0.0.0/0"
+    cidr_block     = "0.0.0.0/0"             # Useful for Operating System patches, etc. Let's connect to the internet via NAT
     nat_gateway_id = aws_nat_gateway.main[count.index].id # Route to the NAT GTW in its respective AZ
   }
   tags = {
@@ -125,7 +125,7 @@ resource "aws_route_table_association" "private" {
 }
 
 
-# Security Group on the ALB. It only accepts inboud connections on Port 80
+# Security Group on the ALB. It only accepts inbound connections on Port 80
 resource "aws_security_group" "alb_sg" {
   name        = "alb-sg"
   description = "Allow HTTP"
@@ -149,7 +149,7 @@ resource "aws_security_group" "alb_sg" {
   }
 }
 
-# Security Group on the ECS (Elastic COntainer Service). It only accepts inboud connections from the ALB
+# Security Group on the ECS (Elastic Container Service). It only accepts inbound connections from the ALB
 resource "aws_security_group" "ecs_sg" {
   name        = "ecs-sg"
   description = "Allow ALB to ECS"
@@ -278,7 +278,7 @@ resource "aws_iam_role" "ecs_task_role" {
 }
 
 
-# ECS Task Definition. This is were I define the Fargate container. Key parameters are:
+# ECS Task Definition. This is where I define the Fargate container. Key parameters are:
 # 	- CPU 256 means 0.25 vCPU 
 # 	- Memory 512MB per task
 resource "aws_ecs_task_definition" "app" {
