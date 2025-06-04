@@ -1,6 +1,6 @@
 # By Cesar Armengol, June 3rd 2025
 
-This repository (main.tf) holds the exercise for Palo Alto as described here:
+This repository (main.tf) holds the exercise described here:
 
 Infrastructure deployment task:
 
@@ -11,7 +11,7 @@ Create the architecture diagram for the deployment using:
 https://github.com/mingrammer/diagrams
 
  
-If applicable depends on your chosen approach:
+If applicable, it depends on your chosen approach:
 
 	1. Ensure the application is deployed behind a load balancer.
 
